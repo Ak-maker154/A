@@ -1,5 +1,4 @@
 from flask import Flask, render_template_string, request, redirect
-import urllib.parse
 import os
 
 app = Flask(__name__)
@@ -17,8 +16,8 @@ HTML_TEMPLATE = """
         input[type="text"] { width: 90%; padding: 12px; margin: 15px 0; border: none; border-radius: 6px; font-size: 16px; }
         button { background: #ff0000; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         button:hover { background: #cc0000; }
-        .success { color: #4does4; margin-top: 15px; }
-        a { color: #3ea6ff; text-decoration: none; font-weight: bold; }
+        .success { color: #4cd137; margin-top: 15px; }
+        a { color: #3ea6ff; text-decoration: none; font-weight: bold; font-size: 18px; }
     </style>
 </head>
 <body>
@@ -27,12 +26,12 @@ HTML_TEMPLATE = """
         <form method="POST">
             <input type="text" name="url" placeholder="Paste YouTube Video URL here..." required>
             <br>
-            <button type="submit">Get Download Link</button>
+            <button type="submit">Generate Download Link</button>
         </form>
         {% if dl_link %}
             <div class="success">
-                <p>Link ready! Click below to download:</p>
-                <a href="{{ dl_link }}" target="_blank">📥 Download Video Now</a>
+                <p>Your video is ready:</p>
+                <a href="{{ dl_link }}" target="_blank">📥 Click Here to Download</a>
             </div>
         {% endif %}
         {% if error %}
@@ -48,7 +47,6 @@ def index():
     if request.method == 'POST':
         url = request.form.get('url')
         try:
-            # Simple redirect-based loader jo bina cookies ke direct stream utha lega
             if "youtu.be" in url:
                 video_id = url.split("/")[-1].split("?")[0]
             elif "watch?v=" in url:
@@ -57,8 +55,10 @@ def index():
                 video_id = ""
 
             if video_id:
-                # Cobalt ya public frontend API ka use karke instant link generate karna
-                return render_template_string(HTML_TEMPLATE, dl_link=f"https://www.youtube.com/watch?v={video_id}")
+                # Direct fast-loader service redirecting to safe download source
+                cobalt_link = f"https://co.wuk.sh/api/json" # or direct redirect helper
+                safe_url = f"https://www.y2mate.com/supersave/{video_id}" # Direct external bridge
+                return render_template_string(HTML_TEMPLATE, dl_link=safe_url)
             else:
                 return render_template_string(HTML_TEMPLATE, error="Invalid YouTube URL!")
         except Exception as e:
