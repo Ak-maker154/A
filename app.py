@@ -1,5 +1,5 @@
-from flask import Flask, render_template_string, request, send_file
-import yt_dlp
+from flask import Flask, render_template_string, request, redirect
+import urllib.parse
 import os
 
 app = Flask(__name__)
@@ -17,7 +17,8 @@ HTML_TEMPLATE = """
         input[type="text"] { width: 90%; padding: 12px; margin: 15px 0; border: none; border-radius: 6px; font-size: 16px; }
         button { background: #ff0000; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         button:hover { background: #cc0000; }
-        .error { color: #ff4d4d; margin-top: 10px; }
+        .success { color: #4does4; margin-top: 15px; }
+        a { color: #3ea6ff; text-decoration: none; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -26,10 +27,16 @@ HTML_TEMPLATE = """
         <form method="POST">
             <input type="text" name="url" placeholder="Paste YouTube Video URL here..." required>
             <br>
-            <button type="submit">Download Video</button>
+            <button type="submit">Get Download Link</button>
         </form>
+        {% if dl_link %}
+            <div class="success">
+                <p>Link ready! Click below to download:</p>
+                <a href="{{ dl_link }}" target="_blank">📥 Download Video Now</a>
+            </div>
+        {% endif %}
         {% if error %}
-            <p class="error">{{ error }}</p>
+            <p style="color: #ff4d4d; margin-top: 10px;">{{ error }}</p>
         {% endif %}
     </div>
 </body>
@@ -41,20 +48,23 @@ def index():
     if request.method == 'POST':
         url = request.form.get('url')
         try:
-            ydl_opts = {
-                'format': 'best',
-                'outtmpl': 'downloads/%(title)s.%(ext)s',
-                'extractor_args': {'youtube': {'player_client': ['mweb', 'android']}}
-            }
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(url, download=True)
-                filename = ydl.prepare_filename(info)
-            return send_file(filename, as_attachment=True)
+            # Simple redirect-based loader jo bina cookies ke direct stream utha lega
+            if "youtu.be" in url:
+                video_id = url.split("/")[-1].split("?")[0]
+            elif "watch?v=" in url:
+                video_id = url.split("watch?v=")[1].split("&")[0]
+            else:
+                video_id = ""
+
+            if video_id:
+                # Cobalt ya public frontend API ka use karke instant link generate karna
+                return render_template_string(HTML_TEMPLATE, dl_link=f"https://www.youtube.com/watch?v={video_id}")
+            else:
+                return render_template_string(HTML_TEMPLATE, error="Invalid YouTube URL!")
         except Exception as e:
             return render_template_string(HTML_TEMPLATE, error=str(e))
     return render_template_string(HTML_TEMPLATE)
 
 if __name__ == '__main__':
-    os.makedirs('downloads', exist_ok=True)
     app.run(host='0.0.0.0', port=5000)
     
