@@ -1,4 +1,5 @@
 from flask import Flask, render_template_string, request, redirect
+import requests
 import os
 
 app = Flask(__name__)
@@ -17,7 +18,7 @@ HTML_TEMPLATE = """
         button { background: #ff0000; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         button:hover { background: #cc0000; }
         .success { color: #4cd137; margin-top: 15px; }
-        a { color: #3ea6ff; text-decoration: none; font-weight: bold; font-size: 18px; }
+        a { color: #3ea6ff; text-decoration: none; font-weight: bold; font-size: 18px; word-break: break-all; }
     </style>
 </head>
 <body>
@@ -26,12 +27,12 @@ HTML_TEMPLATE = """
         <form method="POST">
             <input type="text" name="url" placeholder="Paste YouTube Video URL here..." required>
             <br>
-            <button type="submit">Generate Download Link</button>
+            <button type="submit">Get Download Link</button>
         </form>
         {% if dl_link %}
             <div class="success">
-                <p>Your video is ready:</p>
-                <a href="{{ dl_link }}" target="_blank">📥 Click Here to Download</a>
+                <p>Your download link is ready:</p>
+                <a href="{{ dl_link }}" target="_blank">📥 Click Here to Download Video</a>
             </div>
         {% endif %}
         {% if error %}
@@ -47,24 +48,28 @@ def index():
     if request.method == 'POST':
         url = request.form.get('url')
         try:
-            if "youtu.be" in url:
-                video_id = url.split("/")[-1].split("?")[0]
-            elif "watch?v=" in url:
-                video_id = url.split("watch?v=")[1].split("&")[0]
+            headers = {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            }
+            data = {
+                "url": url
+            }
+            response = requests.post("https://api.cobalt.tools/api/json", json=data, headers=headers)
+            res_json = response.json()
+            
+            if "url" in res_json:
+                download_url = res_json["url"]
+                return render_template_string(HTML_TEMPLATE, dl_link=download_url)
+            elif "picker" in res_json:
+                download_url = res_json["picker"][0]["url"]
+                return render_template_string(HTML_TEMPLATE, dl_link=download_url)
             else:
-                video_id = ""
-
-            if video_id:
-                # Direct fast-loader service redirecting to safe download source
-                cobalt_link = f"https://co.wuk.sh/api/json" # or direct redirect helper
-                safe_url = f"https://www.y2mate.com/supersave/{video_id}" # Direct external bridge
-                return render_template_string(HTML_TEMPLATE, dl_link=safe_url)
-            else:
-                return render_template_string(HTML_TEMPLATE, error="Invalid YouTube URL!")
+                return render_template_string(HTML_TEMPLATE, error="Could not fetch download link. Try another URL.")
         except Exception as e:
             return render_template_string(HTML_TEMPLATE, error=str(e))
     return render_template_string(HTML_TEMPLATE)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port5000)
     
