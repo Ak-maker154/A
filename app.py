@@ -1,4 +1,4 @@
-from flask import Flask, render_template_string, request, send_file, redirect, url_for
+from flask import Flask, render_template_string, request, send_file
 import yt_dlp
 import os
 
@@ -44,8 +44,7 @@ def index():
             ydl_opts = {
                 'format': 'best',
                 'outtmpl': 'downloads/%(title)s.%(ext)s',
-                'cookiefile': 'cookies.txt',
-                'extractor_args': {'youtube': {'player_client': ['android', 'web']}}
+                'extractor_args': {'youtube': {'player_client': ['mweb', 'android']}}
             }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=True)
