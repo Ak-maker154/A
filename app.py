@@ -41,7 +41,11 @@ def index():
     if request.method == 'POST':
         url = request.form.get('url')
         try:
-            ydl_opts = {'format': 'best', 'outtmpl': 'downloads/%(title)s.%(ext)s'}
+            ydl_opts = {
+                'format': 'best',
+                'outtmpl': 'downloads/%(title)s.%(ext)s',
+                'extractor_args': {'youtube': {'player_client': ['android', 'web']}}
+            }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=True)
                 filename = ydl.prepare_filename(info)
@@ -53,4 +57,4 @@ def index():
 if __name__ == '__main__':
     os.makedirs('downloads', exist_ok=True)
     app.run(host='0.0.0.0', port=5000)
-              
+    
