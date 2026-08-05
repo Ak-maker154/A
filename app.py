@@ -44,6 +44,7 @@ def index():
             ydl_opts = {
                 'format': 'best',
                 'outtmpl': 'downloads/%(title)s.%(ext)s',
+                'cookiefile': 'cookies.txt',
                 'extractor_args': {'youtube': {'player_client': ['android', 'web']}}
             }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
